@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Global Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  @apply bg-surface-900 text-white font-sans antialiased;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #1e1e35; }
+::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+
+/* ── Glassmorphism card ──────────────────────────────────────────────────── */
+@layer components {
+  .glass-card {
+    @apply bg-surface-800 border border-white/10 rounded-2xl shadow-xl;
+    backdrop-filter: blur(12px);
+  }
+
+  /* Primary gradient button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm
+           bg-gradient-to-r from-brand-600 to-brand-500 text-white
+           hover:from-brand-500 hover:to-brand-400
+           transition-all duration-200 shadow-lg hover:shadow-brand-500/30
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Secondary ghost button */
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm
+           border border-white/15 text-white/80
+           hover:bg-white/5 hover:text-white hover:border-white/30
+           transition-all duration-200;
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm
+           bg-red-500/20 border border-red-500/30 text-red-400
+           hover:bg-red-500/30 hover:text-red-300 transition-all duration-200;
+  }
+
+  /* Form inputs */
+  .input {
+    @apply w-full bg-surface-700 border border-white/10 rounded-xl px-4 py-2.5
+           text-white placeholder-white/30 text-sm
+           focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/50
+           transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-white/70 mb-1.5;
+  }
+
+  /* Status badge */
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-pending     { @apply bg-yellow-500/15 text-yellow-400 border border-yellow-500/20; }
+  .badge-shortlisted { @apply bg-green-500/15 text-green-400 border border-green-500/20; }
+  .badge-rejected    { @apply bg-red-500/15 text-red-400 border border-red-500/20; }
+
+  /* Skill pill */
+  .skill-pill {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-brand-500/15 text-brand-300 border border-brand-500/20;
+  }
+
+  /* Score ring color helpers */
+  .score-high  { @apply text-green-400; }
+  .score-mid   { @apply text-yellow-400; }
+  .score-low   { @apply text-red-400; }
+}
+
+/* ── Animated gradient background blob ─────────────────────────────────── */
+.gradient-blob {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.gradient-blob::before {
+  content: '';
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  top: -200px;
+  right: -150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+  animation: float 8s ease-in-out infinite;
+}
+.gradient-blob::after {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  left: -100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+  animation: float 10s ease-in-out infinite reverse;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-40px) scale(1.05); }
+}
+
+/* ── Page content above blob ────────────────────────────────────────────── */
+.page-content { position: relative; z-index: 1; }

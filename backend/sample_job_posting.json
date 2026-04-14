@@ -1,0 +1,8 @@
+{
+  "title": "Senior Backend Engineer",
+  "description": "We are looking for a Senior Backend Engineer to build scalable REST APIs, design database models, and lead architecture reviews.",
+  "required_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "AWS"],
+  "experience_level": "5+ years",
+  "education_requirement": "Bachelor of Technology",
+  "deadline": "2026-06-30T23:59:59Z"
+}
