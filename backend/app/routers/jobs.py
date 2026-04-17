@@ -13,6 +13,7 @@ from typing import List, Optional
 from app.database import get_db
 from app.models.job import Job
 from app.models.candidate import Candidate
+from app.models.ranking import Ranking
 from app.schemas.job import JobCreate, JobUpdate, JobOut
 from app.services.auth_service import get_current_hr_user
 from app.models.user import User
@@ -79,6 +80,40 @@ async def list_jobs(
     count_map = {row.job_id: row.cnt for row in count_result}
 
     return [_job_out(j, count_map.get(j.id, 0)) for j in jobs]
+
+
+@router.get("/summary")
+async def get_jobs_summary(
+    active_only: bool = Query(True, description="Only include active jobs in the dashboard summary"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return summary metrics for HR dashboard widgets."""
+    total_jobs_query = select(func.count(Job.id))
+    if active_only:
+        total_jobs_query = total_jobs_query.where(Job.is_active == True)
+    total_jobs = (await db.execute(total_jobs_query)).scalar() or 0
+
+    resumes_query = select(func.count(Candidate.id))
+    if active_only:
+        resumes_query = resumes_query.join(Job, Candidate.job_id == Job.id).where(Job.is_active == True)
+    resumes_received = (await db.execute(resumes_query)).scalar() or 0
+
+    shortlisted_query = select(func.count(Ranking.id)).where(Ranking.status == 'shortlisted')
+    if active_only:
+        shortlisted_query = shortlisted_query.join(Job, Ranking.job_id == Job.id).where(Job.is_active == True)
+    shortlisted_count = (await db.execute(shortlisted_query)).scalar() or 0
+
+    avg_score_query = select(func.avg(Ranking.total_score))
+    if active_only:
+        avg_score_query = avg_score_query.join(Job, Ranking.job_id == Job.id).where(Job.is_active == True)
+    avg_match_score = (await db.execute(avg_score_query)).scalar() or 0.0
+
+    return {
+        "total_jobs": int(total_jobs),
+        "resumes_received": int(resumes_received),
+        "shortlisted": int(shortlisted_count),
+        "avg_match_score": round(float(avg_match_score or 0.0), 1),
+    }
 
 
 @router.get("/{job_id}", response_model=JobOut)

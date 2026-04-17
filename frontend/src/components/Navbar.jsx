@@ -4,7 +4,7 @@
 import React from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, PlusCircle, LogOut, Cpu } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, LogOut, Cpu, Users } from 'lucide-react'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -43,6 +43,16 @@ export default function Navbar() {
           >
             <LayoutDashboard size={15} />
             Dashboard
+          </Link>
+          <Link
+            to="/candidates"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              ${isActive('/candidates')
+                ? 'bg-brand-500/20 text-brand-300 border border-brand-500/20'
+                : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+          >
+            <Users size={15} />
+            All Candidates
           </Link>
           <Link
             to="/jobs/new"

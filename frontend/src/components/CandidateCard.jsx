@@ -14,7 +14,7 @@ const STATUS_CONFIG = {
 }
 
 function ScoreBar({ label, value }) {
-  const color = value >= 70 ? 'bg-green-500' : value >= 45 ? 'bg-yellow-500' : 'bg-red-500'
+  const color = value >= 80 ? 'bg-green-500' : value >= 60 ? 'bg-yellow-500' : 'bg-red-500'
   return (
     <div>
       <div className="flex justify-between text-xs mb-1">
@@ -85,6 +85,9 @@ export default function CandidateCard({ candidate, rank, onStatusChange }) {
                   <span className="flex items-center gap-1"><FileText size={11} />{candidate.resume_filename}</span>
                   <span className="flex items-center gap-1"><Briefcase size={11} />{candidate.parsed_experience}y exp</span>
                   <span className="flex items-center gap-1"><GraduationCap size={11} />{candidate.parsed_education || '—'}</span>
+                </div>
+                <div className="mt-4 max-w-md">
+                  <ScoreBar label="Match Score" value={candidate.total_score} />
                 </div>
               </div>
 

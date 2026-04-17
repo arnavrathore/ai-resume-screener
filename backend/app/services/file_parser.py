@@ -2,19 +2,19 @@
 services/file_parser.py — Extract raw text from PDF and DOCX resume files.
 
 Libraries used:
-  - PyMuPDF (fitz) for PDF parsing
+  - pdfplumber for PDF parsing
   - python-docx for DOCX parsing
 """
 
 import os
-import fitz  # PyMuPDF
+import pdfplumber
 import docx
 from fastapi import HTTPException, status
 
 
 def extract_text_from_pdf(file_path: str) -> str:
     """
-    Extract all text from a PDF file using PyMuPDF.
+    Extract all text from a PDF file using pdfplumber.
 
     Args:
         file_path: Absolute path to the PDF file.
@@ -30,9 +30,11 @@ def extract_text_from_pdf(file_path: str) -> str:
 
     try:
         text_parts = []
-        with fitz.open(file_path) as doc:
-            for page in doc:
-                text_parts.append(page.get_text("text"))
+        with pdfplumber.open(file_path) as pdf:
+            for page in pdf.pages:
+                text = page.extract_text()
+                if text:
+                    text_parts.append(text)
         return "\n".join(text_parts)
     except Exception as e:
         raise HTTPException(

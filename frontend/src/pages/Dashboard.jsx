@@ -7,6 +7,7 @@ import toast from 'react-hot-toast'
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState([])
+  const [summary, setSummary] = useState({ total_jobs: 0, resumes_received: 0, shortlisted: 0, avg_match_score: 0.0 })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeOnly, setActiveOnly] = useState(true)
@@ -23,7 +24,19 @@ export default function Dashboard() {
     }
   }
 
-  useEffect(() => { fetchJobs() }, [activeOnly, search])
+  const fetchSummary = async () => {
+    try {
+      const { data } = await jobsAPI.summary(activeOnly)
+      setSummary(data)
+    } catch (error) {
+      toast.error('Unable to load dashboard summary.')
+    }
+  }
+
+  useEffect(() => {
+    fetchJobs()
+    fetchSummary()
+  }, [activeOnly, search])
 
   const handleDelete = async (jobId) => {
     if (!window.confirm('Delete this job posting? This cannot be undone.')) return
@@ -49,6 +62,20 @@ export default function Dashboard() {
           </div>
 
           <Link to="/jobs/new" className="btn-primary whitespace-nowrap">Create a new job</Link>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { label: 'Total Jobs', value: summary.total_jobs },
+            { label: 'Resumes Received', value: summary.resumes_received },
+            { label: 'Shortlisted', value: summary.shortlisted },
+            { label: 'Avg Match Score', value: `${summary.avg_match_score.toFixed(1)}%` },
+          ].map((card) => (
+            <div key={card.label} className="glass-card p-6 border border-white/10">
+              <p className="text-sm text-white/60 uppercase tracking-[0.3em] mb-3">{card.label}</p>
+              <p className="text-3xl font-semibold text-white">{card.value}</p>
+            </div>
+          ))}
         </section>
 
         <section className="grid gap-4 md:grid-cols-[1fr_280px]">

@@ -1,14 +1,42 @@
-# AI Resume Screener
+# AI-Based Resume Screening System
 
-A modern job posting and resume screening system built with:
+## Overview
 
-- Backend: **FastAPI** + **SQLite** (swapable to PostgreSQL)
-- Frontend: **React 18** + **Vite** + **Tailwind CSS**
-- NLP: **spaCy** and a custom resume parser
-- File parsing: **PyMuPDF** for PDF, **python-docx** for DOCX
-- Authentication: **JWT** login for HR users
+AI-Based Resume Screening System is a two-portal hiring platform that empowers HR teams to post jobs, review candidate submissions, and shortlist the best matches automatically. Candidates can upload resumes in PDF or DOCX format and receive instant skill parsing and job fit ranking.
 
-## Folder Structure
+### Built By
+- Arnav Rathore
+
+## Key Features
+
+- Automated PDF and DOCX resume parsing
+- Weighted candidate ranking based on skills, experience, education, and keywords
+- Dual-role portals for HR and Candidates
+- Secure login and role-based route protection
+- Resume upload validation and parsing with AI-friendly file extraction
+
+## Ranking Logic
+
+The system computes a weighted match score for each resume using four components:
+
+- `skill_score` — how many required skills match candidate skills
+- `experience_score` — how well the candidate's experience level matches the job requirement
+- `education_score` — how the candidate's degree level compares to the job requirement
+- `keyword_score` — how closely resume text aligns with the job description
+
+These scores are combined into a final `total_score` using configurable weights. For example:
+
+```text
+total_score =
+  skill_score * weight_skills +
+  experience_score * weight_experience +
+  education_score * weight_education +
+  keyword_score * weight_keywords
+```
+
+The ranking engine stores both the breakdown and the final composite score, so HR can review matches transparently.
+
+## Project Structure
 
 ```
 ai-resume-screener/
@@ -18,29 +46,14 @@ ai-resume-screener/
       database.py
       main.py
       models/
-        candidate.py
-        job.py
-        ranking.py
-        user.py
       routers/
-        auth.py
-        candidates.py
-        jobs.py
-        rankings.py
       schemas/
-        candidate.py
-        job.py
-        user.py
       services/
-        auth_service.py
-        file_parser.py
-        nlp_engine.py
-        ranker.py
-        __init__.py
     requirements.txt
     run.py
+    seed.py
+    uploads/
     sample_job_posting.json
-    sample_resume.docx
   frontend/
     index.html
     package.json
@@ -53,139 +66,82 @@ ai-resume-screener/
       main.jsx
       components/
       context/
+      pages/
       services/
 ```
 
-## Database Schema
-
-- `users`: HR users with `id`, `email`, `full_name`, `hashed_password`, `role`, and `is_active`.
-- `jobs`: job postings with `title`, `description`, `required_skills`, `experience_level`, `education_requirement`, `deadline`, `is_active`, and `created_by`.
-- `candidates`: uploaded resumes linked to jobs via `job_id`, storing candidate name, email, resume filename/path, parsed skills, education, experience, and raw text.
-- `rankings`: score breakdown for each candidate (`skill_score`, `experience_score`, `education_score`, `keyword_score`, `total_score`) plus HR decision state.
-
-Relationships:
-- `users` → `jobs`: one HR user creates many jobs.
-- `jobs` → `candidates`: one job has many candidate applications.
-- `candidates` → `rankings`: one candidate has one ranking record.
-- `jobs` → `rankings`: one job has many ranking records.
-
-## Backend API Endpoints
-
-### Authentication
-
-- `POST /auth/register`
-  - Request: `{ "email", "full_name", "password", "role" }`
-  - Response: HR user data
-
-- `POST /auth/login`
-  - Request: `{ "email", "password" }`
-  - Response: `{ "access_token", "token_type", "user" }`
-
-### Job Postings
-
-- `GET /jobs`
-  - Query: `active_only`, `search`
-  - Response: list of jobs with candidate counts
-
-- `GET /jobs/{job_id}`
-  - Response: single job record
-
-- `POST /jobs`
-  - HR only
-  - Request: `{ "title", "description", "required_skills", "experience_level", "education_requirement", "deadline" }`
-
-- `PUT /jobs/{job_id}`
-  - HR only
-  - Update job posting fields
-
-- `DELETE /jobs/{job_id}`
-  - HR only
-
-### Candidate Uploads
-
-- `POST /candidates/upload`
-  - Public endpoint
-  - Accepts form data: `name`, `email`, `job_id`, `resume` (.pdf or .docx)
-  - Response: parsed skills, education, experience, match score
-
-- `GET /candidates/job/{job_id}`
-  - HR only
-  - Returns candidates for a job with ranking metadata
-
-- `GET /candidates/{candidate_id}`
-  - HR only
-
-- `DELETE /candidates/{candidate_id}`
-  - HR only
-
-### Rankings
-
-- `POST /rankings/run/{job_id}`
-  - HR only
-  - Recompute ranking scores for all candidates on a job
-
-- `GET /rankings/{job_id}`
-  - HR only
-  - Query options: `status_filter`, `min_score`, `skill_contains`, `min_experience`, `name_contains`, `email_contains`
-
-- `PATCH /rankings/{ranking_id}/status`
-  - HR only
-  - Request: `{ "status": "shortlisted" | "rejected" | "pending" }`
-
-- `GET /rankings/config/weights`
-  - HR only
-
-- `PUT /rankings/config/weights`
-  - HR only
-  - Update weights for scoring formula
-
-## Running Locally
+## Setup Guide
 
 ### Backend
+
+1. Install backend dependencies:
 
 ```bash
 cd backend
 python -m pip install -r requirements.txt
-python run.py
 ```
 
-The backend will be available at `http://localhost:8000`.
-Open `http://localhost:8000/docs` for interactive API docs.
-
-### Frontend
+2. Seed initial demo data:
 
 ```bash
-cd frontend
-npm install
-npm run dev
-```
-
-The frontend will run on `http://localhost:5173` by default.
-
-### Seed Sample Data
-
-To populate the database with sample HR user, job, and candidates:
-
-```bash
-cd backend
 python seed.py
 ```
 
 This creates:
 - HR user: `hr@company.com` / `password123`
-- Sample job: "Senior Backend Engineer"
-- 3 sample candidates with parsed resumes and rankings
+- Candidate user: `candidate@company.com` / `password123`
+- Sample job posting and example candidate records
 
-## Sample Job Posting
+3. Run the backend server:
 
-See `backend/sample_job_posting.json`.
+```bash
+python run.py
+```
 
-## Sample Resume
+4. Access the API docs at:
 
-See `backend/sample_resume.docx`.
+```text
+http://localhost:8000/docs
+```
+
+### Frontend
+
+1. Install frontend dependencies:
+
+```bash
+cd frontend
+npm install
+```
+
+2. Start the frontend:
+
+```bash
+npm run dev
+```
+
+3. Open the app in your browser at:
+
+```text
+http://localhost:5173
+```
+
+## Candidate Login
+
+Use the seeded candidate account to test resume uploads and the candidate portal:
+
+- Email: `candidate@company.com`
+- Password: `password123`
+
+## HR Login
+
+Use the seeded HR account to create jobs and review candidates:
+
+- Email: `hr@company.com`
+- Password: `password123`
 
 ## Notes
 
-- The default database is SQLite (`resume_screener.db`).
-- Uploaded resumes are stored in `backend/uploads/`.
-- Weights are configurable via the rankings config endpoint and are used to tune skill, experience, education, and keyword matching.
+- Resume parsing uses `pdfplumber` for PDFs and `python-docx` for DOCX files.
+- File uploads are validated via `python-multipart`.
+- Ranking weights can be adjusted by HR to tune candidate match scoring.
+- The backend defaults to SQLite, but SQLAlchemy enables easy migration to PostgreSQL.

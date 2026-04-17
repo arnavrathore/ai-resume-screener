@@ -33,6 +33,16 @@ async def seed_db():
             session.add(hr_user)
             await session.flush()
 
+            # ── Create Candidate User ───────────────────────────────────────────
+            candidate_user = User(
+                email="candidate@email.com",
+                full_name="John Candidate",
+                hashed_password=hash_password("password123"),
+                role="candidate",
+            )
+            session.add(candidate_user)
+            await session.flush()
+
             # ── Create Sample Job ───────────────────────────────────────────────
             job = Job(
                 title="Senior Backend Engineer",

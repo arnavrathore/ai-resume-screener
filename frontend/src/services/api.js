@@ -37,18 +37,20 @@ export const authAPI = {
 
 // ── Jobs ───────────────────────────────────────────────────────────────────
 export const jobsAPI = {
-  list:   (activeOnly = true, search = '') => api.get('/jobs', {
+  list:    (activeOnly = true, search = '') => api.get('/jobs', {
     params: { active_only: activeOnly, search: search || undefined },
   }),
-  get:    (id)    => api.get(`/jobs/${id}`),
-  create: (data)  => api.post('/jobs', data),
-  update: (id, data) => api.put(`/jobs/${id}`, data),
-  delete: (id)    => api.delete(`/jobs/${id}`),
+  summary: (activeOnly = true) => api.get('/jobs/summary', {
+    params: { active_only: activeOnly },
+  }),
+  get:     (id)    => api.get(`/jobs/${id}`),
+  create:  (data)  => api.post('/jobs', data),
+  update:  (id, data) => api.put(`/jobs/${id}`, data),
+  delete:  (id)    => api.delete(`/jobs/${id}`),
 }
 
 // ── Candidates ─────────────────────────────────────────────────────────────
-export const candidatesAPI = {
-  upload:     (formData) => api.post('/candidates/upload', formData, {
+export const candidatesAPI = {  listAll:    ()        => api.get('/candidates'),  upload:     (formData) => api.post('/candidates/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   listByJob:  (jobId)  => api.get(`/candidates/job/${jobId}`),

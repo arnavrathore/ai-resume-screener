@@ -13,8 +13,8 @@ export function AuthProvider({ children }) {
   })
   const [token, setToken] = useState(() => localStorage.getItem('token') || null)
 
-  const login = useCallback(async (email, password) => {
-    const { data } = await authAPI.login({ email, password })
+  const login = useCallback(async (email, password, role = 'hr') => {
+    const { data } = await authAPI.login({ email, password, role })
     localStorage.setItem('token', data.access_token)
     localStorage.setItem('user',  JSON.stringify(data.user))
     setToken(data.access_token)

@@ -63,6 +63,13 @@ async def login(payload: UserLogin, db: AsyncSession = Depends(get_db)):
             detail="Account is deactivated. Contact your administrator.",
         )
 
+    # Validate that the user has the requested role
+    if user.role != payload.role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Access denied. This account does not have {payload.role} privileges.",
+        )
+
     token = create_access_token(
         data={"sub": user.email, "user_id": user.id, "role": user.role}
     )

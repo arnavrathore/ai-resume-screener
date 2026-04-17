@@ -4,8 +4,8 @@
 import React from 'react'
 
 function getScoreColor(score) {
-  if (score >= 70) return { stroke: '#4ade80', text: 'text-green-400', bg: 'rgba(74,222,128,0.1)' }
-  if (score >= 45) return { stroke: '#facc15', text: 'text-yellow-400', bg: 'rgba(250,204,21,0.1)' }
+  if (score >= 80) return { stroke: '#4ade80', text: 'text-green-400', bg: 'rgba(74,222,128,0.1)' }
+  if (score >= 60) return { stroke: '#facc15', text: 'text-yellow-400', bg: 'rgba(250,204,21,0.1)' }
   return           { stroke: '#f87171', text: 'text-red-400',   bg: 'rgba(248,113,113,0.1)' }
 }
 

@@ -2,6 +2,7 @@
  * FileUpload.jsx — Drag-and-drop file upload zone for resumes.
  */
 import React, { useRef, useState } from 'react'
+import toast from 'react-hot-toast'
 import { Upload, FileText, X, CheckCircle } from 'lucide-react'
 
 export default function FileUpload({ onFileSelect, accept = '.pdf,.docx', maxMB = 10 }) {
@@ -14,11 +15,15 @@ export default function FileUpload({ onFileSelect, accept = '.pdf,.docx', maxMB 
     setError(null)
     const ext = f.name.split('.').pop().toLowerCase()
     if (!['pdf', 'docx'].includes(ext)) {
-      setError('Only PDF and DOCX files are accepted.')
+      const errorMsg = 'Invalid file type. Please upload a PDF or DOCX file.'
+      setError(errorMsg)
+      toast.error(errorMsg)
       return false
     }
     if (f.size > maxMB * 1024 * 1024) {
-      setError(`File size must be under ${maxMB} MB.`)
+      const errorMsg = `File too large. Maximum allowed size is ${maxMB} MB.`
+      setError(errorMsg)
+      toast.error(errorMsg)
       return false
     }
     return true

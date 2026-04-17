@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
+from werkzeug.utils import secure_filename
 
 from app.database import get_db
 from app.models.candidate import Candidate
@@ -63,10 +64,21 @@ async def upload_resume(
     original_filename = resume.filename or "resume"
     _, ext = os.path.splitext(original_filename)
     ext = ext.lower()
-    if ext not in settings.ALLOWED_EXTENSIONS:
+    
+    # Server-side extension check: only allow .pdf and .docx files
+    allowed_extensions = [".pdf", ".docx"]
+    if ext not in allowed_extensions:
         raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail=f"File type '{ext}' not allowed. Please upload a PDF or DOCX file.",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file type. Please upload a PDF or DOCX file.",
+        )
+
+    # Filename sanitization: use secure_filename to prevent directory traversal attacks
+    secure_name = secure_filename(original_filename)
+    if not secure_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid filename. Please use a valid filename.",
         )
 
     # ── Validate file size ─────────────────────────────────────────────────
@@ -79,12 +91,13 @@ async def upload_resume(
         )
 
     # ── Save file to disk ──────────────────────────────────────────────────
-    unique_name = f"{uuid.uuid4().hex}{ext}"
+    unique_name = f"{uuid.uuid4().hex}_{secure_name}"
     file_path = os.path.join(settings.UPLOAD_DIR, unique_name)
     with open(file_path, "wb") as f:
         f.write(content)
 
     # ── Extract text & run NLP ─────────────────────────────────────────────
+    # Use pdfplumber for PDF files and python-docx for DOCX files to extract raw text
     try:
         raw_text = extract_text(file_path)
         parsed = parse_resume(raw_text)
@@ -115,6 +128,7 @@ async def upload_resume(
     await db.flush()  # get candidate.id
 
     # ── Auto-compute initial ranking ───────────────────────────────────────
+    # Calculate match score against job's required_skills stored in database
     scores = score_candidate(candidate, job)
     ranking = Ranking(
         candidate_id=candidate.id,
@@ -132,6 +146,39 @@ async def upload_resume(
         "parsed_experience_years": parsed["experience_years"],
         "match_score": scores["total_score"],
     }
+
+
+@router.get("")
+async def list_all_candidates(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_hr_user),
+):
+    """List all candidates across all jobs with job title and match score. HR only."""
+    result = await db.execute(
+        select(Candidate, Job, Ranking)
+        .join(Job, Candidate.job_id == Job.id)
+        .outerjoin(Ranking, Ranking.candidate_id == Candidate.id)
+        .order_by(Candidate.created_at.desc())
+    )
+    rows = result.all()
+
+    return [
+        {
+            "id": candidate.id,
+            "name": candidate.name,
+            "email": candidate.email,
+            "job_id": job.id,
+            "job_title": job.title,
+            "resume_filename": candidate.resume_filename,
+            "parsed_skills": [s.strip() for s in (candidate.parsed_skills or "").split(",") if s.strip()],
+            "parsed_education": candidate.parsed_education,
+            "parsed_experience": candidate.parsed_experience,
+            "created_at": candidate.created_at,
+            "status": ranking.status if ranking else "pending",
+            "total_score": ranking.total_score if ranking else 0.0,
+        }
+        for candidate, job, ranking in rows
+    ]
 
 
 @router.get("/job/{job_id}")

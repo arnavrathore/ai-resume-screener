@@ -19,6 +19,7 @@ class UserLogin(BaseModel):
     """Schema for login request."""
     email: EmailStr
     password: str
+    role: str
 
 
 class UserOut(BaseModel):
